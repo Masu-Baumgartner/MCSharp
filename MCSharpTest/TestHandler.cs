@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
+using MCSharp.Network;
 using MCSharp.Pakets;
 using MCSharp.Pakets.Client.Login;
 using MCSharp.Pakets.Client.Status;
@@ -13,6 +14,8 @@ namespace MCSharpTest
 {
     public class TestHandler : IPaketHandler
     {
+        public MinecraftConnection con { get; set; }
+
         public void Handshake(IPaket paket)
         {
             if(paket is HandshakePaket)
@@ -21,11 +24,11 @@ namespace MCSharpTest
                 
                 if(((HandshakePaket)paket).NextState == 1)
                 {
-                    Program.connection.State = MCSharp.Enums.MinecraftState.Status;
+                    con.State = MCSharp.Enums.MinecraftState.Status;
                 }
                 else
                 {
-                    Program.connection.State = MCSharp.Enums.MinecraftState.Login;
+                    con.State = MCSharp.Enums.MinecraftState.Login;
                 }
             }
         }
@@ -41,7 +44,7 @@ namespace MCSharpTest
                     Message = "{\"text\": \"foo\",\"bold\": \"true\",\"extra\": [{\"text\": \"bar\"},{\"text\": \"baz\",\"bold\": \"false\"},{\"text\": \"qux\",\"bold\": \"true\"}]}"
                 };
 
-                Program.connection.SendPaket(dp);
+                con.SendPaket(dp);
             }
         }
 
@@ -61,7 +64,7 @@ namespace MCSharpTest
                     Status = "{\"version\": {\"name\": \"1.18.1\",\"protocol\": 757},\"players\": {\"max\": 100,\"online\": 5,\"sample\": [{\"name\": \"thinkofdeath\",\"id\": \"4566e69f-c907-48ee-8d71-d7ba5aa00d20\"}]},\"description\": {\"text\": \"Hello world\"},\"favicon\": \"data:image/png;base64,<data>\"}"
                 };
 
-                Program.connection.SendPaket(srp);
+                con.SendPaket(srp);
             }
 
             if(paket is PingPaket)
@@ -72,7 +75,7 @@ namespace MCSharpTest
                     Payload = ((PingPaket)paket).Payload
                 };
 
-                Program.connection.SendPaket(pp);
+                con.SendPaket(pp);
             }
         }
     }

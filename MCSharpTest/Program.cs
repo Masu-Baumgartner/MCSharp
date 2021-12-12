@@ -1,5 +1,5 @@
 ﻿using System;
-
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 
@@ -11,7 +11,7 @@ namespace MCSharpTest
     {
         static TcpListener listener;
         static byte[] Buffer = new byte[1024];
-        public static MinecraftConnection connection;
+        public static List<MinecraftConnection> connections = new List<MinecraftConnection>();
 
         static void Main(string[] args)
         {
@@ -28,7 +28,7 @@ namespace MCSharpTest
         {
             TcpClient cl = listener.EndAcceptTcpClient(ar);
 
-            connection = new MinecraftConnection(cl, MCSharp.Enums.MinecraftFlow.ClientToServer);
+            var connection = new MinecraftConnection(cl, MCSharp.Enums.MinecraftFlow.ClientToServer);
 
             PaketRegistry writer = new PaketRegistry();
             PaketRegistry.RegisterClientPakets(writer);
@@ -39,9 +39,16 @@ namespace MCSharpTest
             connection.WriterRegistry = writer;
             connection.ReaderRegistry = reader;
 
-            connection.Handler = new TestHandler();
+            connection.Handler = new TestHandler()
+            {
+                con = connection
+            };
 
             connection.Start();
+
+            connections.Add(connection);
+
+            listener.BeginAcceptTcpClient(OnConnected, null);
         }
     }
 }
