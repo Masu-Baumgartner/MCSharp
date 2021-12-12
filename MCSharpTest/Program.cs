@@ -29,6 +29,19 @@ namespace MCSharpTest
             TcpClient cl = listener.EndAcceptTcpClient(ar);
 
             connection = new MinecraftConnection(cl, MCSharp.Enums.MinecraftFlow.ClientToServer);
+
+            PaketRegistry writer = new PaketRegistry();
+            PaketRegistry.RegisterClientPakets(writer);
+
+            PaketRegistry reader = new PaketRegistry();
+            PaketRegistry.RegisterServerPakets(reader);
+
+            connection.WriterRegistry = writer;
+            connection.ReaderRegistry = reader;
+
+            connection.Handler = new TestHandler();
+
+            connection.Start();
         }
     }
 }
