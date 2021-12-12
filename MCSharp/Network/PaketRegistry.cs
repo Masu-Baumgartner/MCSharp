@@ -2,8 +2,11 @@
 
 using MCSharp.Enums;
 using MCSharp.Pakets;
-using MCSharp.Pakets.Handshake;
-using MCSharp.Pakets.Login;
+using MCSharp.Pakets.Client.Login;
+using MCSharp.Pakets.Client.Status;
+using MCSharp.Pakets.Server.Handshake;
+using MCSharp.Pakets.Server.Login;
+using MCSharp.Pakets.Server.Status;
 
 namespace MCSharp.Network
 {
@@ -45,14 +48,27 @@ namespace MCSharp.Network
         // Pakets the client can understand
         public static void RegisterClientPakets(PaketRegistry registry)
         {
+            // Login
+            registry.AddPaket(0x00, new DisconnectPaket(), MinecraftState.Login);
+            registry.AddPaket(0x01, new EncryptionRequestPaket(), MinecraftState.Login);
 
+            // Status
+            registry.AddPaket(0x00, new StatusResponsePaket(), MinecraftState.Status);
+            registry.AddPaket(0x01, new PongPaket(), MinecraftState.Status);
         }
 
         // Pakets the server can understand
         public static void RegisterServerPakets(PaketRegistry registry)
         {
+            // Handshake
             registry.AddPaket(0x00, new HandshakePaket(), MinecraftState.Handshaking);
+
+            // Login
             registry.AddPaket(0x00, new LoginStartPaket(), MinecraftState.Login);
+
+            // Status
+            registry.AddPaket(0x00, new StatusRequestPaket(), MinecraftState.Status);
+            registry.AddPaket(0x01, new PingPaket(), MinecraftState.Status);
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿using MCSharp.Network;
 
-namespace MCSharp.Pakets.Login
+namespace MCSharp.Pakets.Server.Login
 {
     public class LoginStartPaket : IPaket
     {

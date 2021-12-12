@@ -254,5 +254,13 @@ namespace MCSharp.Network
 
             return result;
         }
+
+        public void SendPaket(IPaket paket)
+        {
+            lock(PaketQueue)
+            {
+                PaketQueue.Enqueue(paket);
+            }
+        }
     }
 }

@@ -4,7 +4,7 @@ using System.Text;
 
 using MCSharp.Network;
 
-namespace MCSharp.Pakets.Handshake
+namespace MCSharp.Pakets.Server.Handshake
 {
     public class HandshakePaket : IPaket
     {
