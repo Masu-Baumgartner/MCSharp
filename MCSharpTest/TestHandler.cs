@@ -18,11 +18,11 @@ namespace MCSharpTest
 
         public void Handshake(IPaket paket)
         {
-            if(paket is HandshakePaket)
+            if (paket is HandshakePaket)
             {
                 Console.WriteLine("Serveraddress: " + ((HandshakePaket)paket).ServerAddress);
-                
-                if(((HandshakePaket)paket).NextState == 1)
+
+                if (((HandshakePaket)paket).NextState == 1)
                 {
                     con.State = MCSharp.Enums.MinecraftState.Status;
                 }
@@ -35,27 +35,37 @@ namespace MCSharpTest
 
         public void Login(IPaket paket)
         {
-            if(paket is LoginStartPaket)
+            if (paket is LoginStartPaket)
             {
                 Console.WriteLine("Username: " + ((LoginStartPaket)paket).Username);
 
-                DisconnectPaket dp = new DisconnectPaket()
+                /*
+                 *  DisconnectPaket dp = new DisconnectPaket()
+                    {
+                        Message = "{\"text\": \"foo\",\"bold\": \"true\",\"extra\": [{\"text\": \"bar\"},{\"text\": \"baz\",\"bold\": \"false\"},{\"text\": \"qux\",\"bold\": \"true\"}]}"
+                    };
+
+                    con.SendPaket(dp);
+                 */
+
+                LoginSuccessPaket lsp = new LoginSuccessPaket()
                 {
-                    Message = "{\"text\": \"foo\",\"bold\": \"true\",\"extra\": [{\"text\": \"bar\"},{\"text\": \"baz\",\"bold\": \"false\"},{\"text\": \"qux\",\"bold\": \"true\"}]}"
+                    Uuid = new MCSharp.Utils.Data.UUID("881ac95e-af99-4875-832c-b42d7ea82cb7"),
+                    Username = "Masusniper"
                 };
 
-                con.SendPaket(dp);
+                con.SendPaket(lsp);
             }
         }
 
         public void Play(IPaket paket)
         {
-            
+
         }
 
         public void Status(IPaket paket)
         {
-            if(paket is StatusRequestPaket)
+            if (paket is StatusRequestPaket)
             {
                 Console.WriteLine("Status requested");
 
@@ -67,7 +77,7 @@ namespace MCSharpTest
                 con.SendPaket(srp);
             }
 
-            if(paket is PingPaket)
+            if (paket is PingPaket)
             {
                 Console.WriteLine("Ping");
                 PongPaket pp = new PongPaket()

@@ -51,6 +51,8 @@ namespace MCSharp.Network
             // Login
             registry.AddPaket(0x00, new DisconnectPaket(), MinecraftState.Login);
             registry.AddPaket(0x01, new EncryptionRequestPaket(), MinecraftState.Login);
+            registry.AddPaket(0x02, new LoginSuccessPaket(), MinecraftState.Login);
+            registry.AddPaket(0x03, new SetCompressionPaket(), MinecraftState.Login);
 
             // Status
             registry.AddPaket(0x00, new StatusResponsePaket(), MinecraftState.Status);
@@ -65,6 +67,7 @@ namespace MCSharp.Network
 
             // Login
             registry.AddPaket(0x00, new LoginStartPaket(), MinecraftState.Login);
+            registry.AddPaket(0x01, new EncryptionResponsePaket(), MinecraftState.Login);
 
             // Status
             registry.AddPaket(0x00, new StatusRequestPaket(), MinecraftState.Status);
