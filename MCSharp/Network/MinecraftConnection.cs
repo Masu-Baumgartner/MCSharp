@@ -17,7 +17,7 @@ namespace MCSharp.Network
     {
         private TcpClient Tcp { get; set; }
         public MinecraftFlow Flow { get; private set; }
-        public MinecraftState State { get; private set; }
+        public MinecraftState State { get; set; }
         public MinecraftStream ReadStream { get; private set; }
         public MinecraftStream WriteStream { get; private set; }
         public CancellationToken CancellationToken { get; set; }
@@ -171,7 +171,7 @@ namespace MCSharp.Network
             {
                 using (MinecraftStream mc = new MinecraftStream(ms, CancellationToken))
                 {
-                    mc.WriteVarInt(WriterRegistry.GetPaketId(paket));
+                    mc.WriteVarInt(WriterRegistry.GetPaketId(paket, State));
                     paket.Encode(mc);
                 }
 
@@ -240,9 +240,7 @@ namespace MCSharp.Network
                 // Compress things
             }
 
-            Logger.Info(packetId);
-
-            Type packetType = ReaderRegistry.Pakets[(byte) packetId].GetType();
+            Type packetType = ReaderRegistry.Pakets[State][(byte) packetId].GetType();
 
             result = (IPaket)packetType.GetConstructors()[0].Invoke(new object[0]);
 

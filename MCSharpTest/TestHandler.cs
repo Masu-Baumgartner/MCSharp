@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Text;
 
 using MCSharp.Pakets;
+using MCSharp.Pakets.Handshake;
+using MCSharp.Pakets.Login;
 
 namespace MCSharpTest
 {
@@ -13,12 +15,16 @@ namespace MCSharpTest
             if(paket is HandshakePaket)
             {
                 Console.WriteLine("Serveraddress: " + ((HandshakePaket)paket).ServerAddress);
+                Program.connection.State = MCSharp.Enums.MinecraftState.Login;
             }
         }
 
         public void Login(IPaket paket)
         {
-            
+            if(paket is LoginStartPaket)
+            {
+                Console.WriteLine("Username: " + ((LoginStartPaket)paket).Username);
+            }
         }
 
         public void Play(IPaket paket)

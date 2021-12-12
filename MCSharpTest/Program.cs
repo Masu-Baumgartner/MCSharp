@@ -7,11 +7,11 @@ using MCSharp.Network;
 
 namespace MCSharpTest
 {
-    class Program
+    public class Program
     {
         static TcpListener listener;
         static byte[] Buffer = new byte[1024];
-        static MinecraftConnection connection;
+        public static MinecraftConnection connection;
 
         static void Main(string[] args)
         {
