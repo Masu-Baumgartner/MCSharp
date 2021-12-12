@@ -10,6 +10,8 @@ using Logging.Net;
 using MCSharp.Pakets;
 using Org.BouncyCastle.Bcpg;
 using System.IO;
+using Ionic.Zlib;
+using MCSharp.Pakets.Client.Login;
 
 namespace MCSharp.Network
 {
@@ -76,6 +78,12 @@ namespace MCSharp.Network
             ReadStream = new MinecraftStream(Tcp.GetStream(), CancellationToken.None);
             WriteStream = new MinecraftStream(Tcp.GetStream(), CancellationToken.None);
             CancellationToken = cancellationToken;
+        }
+
+        public void EnableEncryption(byte[] key)
+        {
+            WriteStream.InitEncryption(key);
+            ReadStream.InitEncryption(key);
         }
 
         public void ProcessNetworkRead()
@@ -152,6 +160,11 @@ namespace MCSharp.Network
 
                         WriteStream.WriteVarInt(data.Length);
                         WriteStream.Write(data);
+
+                        if(toSend is SetCompressionPaket)
+                        {
+                            CompressionEnabled = true;
+                        }
                     }
 
                     sw.SpinOnce();
@@ -177,7 +190,7 @@ namespace MCSharp.Network
 
                 encodedPacket = ms.ToArray();
             }
-            /*
+            
             if (CompressionEnabled)
             {
                 using (MemoryStream ms = new MemoryStream())
@@ -208,7 +221,7 @@ namespace MCSharp.Network
 
                     encodedPacket = ms.ToArray();
                 }
-            }*/
+            }
 
             return encodedPacket;
         }
@@ -236,8 +249,40 @@ namespace MCSharp.Network
             }
             else
             {
-                lastPaketId = -1;
-                // Compress things
+                int packetLength = ReadStream.ReadVarInt();
+
+                int br;
+                int dataLength = ReadStream.ReadVarInt(out br);
+
+                int readMore;
+
+                if (dataLength == 0)
+                {
+                    packetId = ReadStream.ReadVarInt(out readMore);
+                    _lastReceivedPacketId = lastPaketId = packetId;
+                    data = ReadStream.Read(packetLength - (br + readMore));
+                }
+                else
+                {
+                    var data2 = ReadStream.Read(packetLength - br);
+
+                    using (MinecraftStream a = new MinecraftStream(CancellationToken))
+                    {
+                        using (ZlibStream outZStream = new ZlibStream(
+                            a, CompressionMode.Compress, true))
+                        {
+                            outZStream.Write(data);
+                            //  outZStream.Write(data, 0, data.Length);
+                        }
+
+                        a.Seek(0, SeekOrigin.Begin);
+
+                        int l;
+                        packetId = a.ReadVarInt(out l);
+                        _lastReceivedPacketId = lastPaketId = packetId;
+                        data = a.Read(dataLength - l);
+                    }
+                }
             }
 
             Type packetType = ReaderRegistry.Pakets[State][(byte) packetId].GetType();

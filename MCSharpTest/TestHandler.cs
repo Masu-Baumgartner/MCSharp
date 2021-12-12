@@ -48,6 +48,13 @@ namespace MCSharpTest
                     con.SendPaket(dp);
                  */
 
+                SetCompressionPaket scp = new SetCompressionPaket()
+                {
+                    Threshold = 256
+                };
+
+                con.SendPaket(scp);
+
                 LoginSuccessPaket lsp = new LoginSuccessPaket()
                 {
                     Uuid = new MCSharp.Utils.Data.UUID("881ac95e-af99-4875-832c-b42d7ea82cb7"),
