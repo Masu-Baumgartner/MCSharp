@@ -2,6 +2,17 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <Version>0.0.1</Version>
+    <Authors>Marcel-Baumgartner,DalkYoutube</Authors>
+    <Company>Endelon Hosting</Company>
+    <Copyright>Copyright 2022 Marcel-Baumgartner</Copyright>
+    <Description>A minecraft network library to make it esier to create minecraft network apps like proxies, oder custom clients</Description>
+    <PackageProjectUrl>https://github.com/Marcel-Baumgartner/MCSharp</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Marcel-Baumgartner/MCSharp</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>minecraft;networking;tcp</PackageTags>
+    <PackageReleaseNotes>Note: Its just a beta. Not all packets are implemented</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
@@ -25,5 +36,12 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 </Project>
