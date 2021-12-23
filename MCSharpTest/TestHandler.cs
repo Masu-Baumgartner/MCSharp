@@ -1,10 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
+
+using fNbt;
 
 using MCSharp.Network;
 using MCSharp.Pakets;
 using MCSharp.Pakets.Client.Login;
+using MCSharp.Pakets.Client.Play;
 using MCSharp.Pakets.Client.Status;
 using MCSharp.Pakets.Server.Handshake;
 using MCSharp.Pakets.Server.Login;
@@ -62,6 +66,42 @@ namespace MCSharpTest
                 };
 
                 con.SendPaket(lsp);
+
+                Thread.Sleep(500);
+
+                con.State = MCSharp.Enums.MinecraftState.Play;
+
+                NbtFile file = new NbtFile();
+                file.LoadFromFile("dimcodec.nbt");
+                var dimcodec = file.RootTag;
+
+                JoinGamePaket jgp = new JoinGamePaket()
+                {
+                    EntityId = 1234,
+                    IsHardcore = true,
+                    Gamemode = 1,
+                    PreviousGamemode = 1,
+                    WorldCount = 3,
+                    WorldNames = new string[]
+                    {
+                        "minecraft:overworld",
+                        "minecraft:nether",
+                        "minecraft:the_end"
+                    },
+                    WorldName = "minecraft:overworld",
+                    DimesionCodec = dimcodec,
+                    Dimesion = dimcodec,
+                    EnableRespawnScreen = true,
+                    HashedSeed = 12345678987,
+                    IsDebug = false,
+                    IsFlat = true,
+                    MaxPlayers = 100,
+                    ReducedDebugInfo = false,
+                    SimulationDistance = 10,
+                    ViewDistance = 10
+                };
+
+                con.SendPaket(jgp);
             }
         }
 

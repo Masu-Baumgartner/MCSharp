@@ -3,6 +3,7 @@
 using MCSharp.Enums;
 using MCSharp.Pakets;
 using MCSharp.Pakets.Client.Login;
+using MCSharp.Pakets.Client.Play;
 using MCSharp.Pakets.Client.Status;
 using MCSharp.Pakets.Server.Handshake;
 using MCSharp.Pakets.Server.Login;
@@ -57,6 +58,9 @@ namespace MCSharp.Network
             // Status
             registry.AddPaket(0x00, new StatusResponsePaket(), MinecraftState.Status);
             registry.AddPaket(0x01, new PongPaket(), MinecraftState.Status);
+
+            // Play
+            registry.AddPaket(0x26, new JoinGamePaket(), MinecraftState.Play);
         }
 
         // Pakets the server can understand
