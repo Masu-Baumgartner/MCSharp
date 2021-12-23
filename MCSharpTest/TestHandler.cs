@@ -13,6 +13,7 @@ using MCSharp.Pakets.Client.Status;
 using MCSharp.Pakets.Server.Handshake;
 using MCSharp.Pakets.Server.Login;
 using MCSharp.Pakets.Server.Status;
+using MCSharp.Utils.Tools;
 
 namespace MCSharpTest
 {
@@ -116,20 +117,20 @@ namespace MCSharpTest
             {
                 Console.WriteLine("Status requested");
 
-                StatusResponsePaket srp = new StatusResponsePaket()
+                /*StatusResponsePaket srp = new StatusResponsePaket()
                 {
                     Status = "{\"version\": {\"name\": \"1.18.1\",\"protocol\": 757},\"players\": {\"max\": 100,\"online\": 5,\"sample\": [{\"name\": \"thinkofdeath\",\"id\": \"4566e69f-c907-48ee-8d71-d7ba5aa00d20\"}]},\"description\": {\"text\": \"Hello world\"},\"favicon\": \"data:image/png;base64,<data>\"}"
-                };
+                };*/
 
-                con.SendPaket(srp);
+                con.SendPaket(new StatusResponse().SetMaxPlayers(100).SetOnlinePlayers(500).GetPaket());
             }
 
-            if (paket is PingPaket)
+            if (paket is PingPaket r)
             {
                 Console.WriteLine("Ping");
                 PongPaket pp = new PongPaket()
                 {
-                    Payload = ((PingPaket)paket).Payload
+                    Payload = r.Payload
                 };
 
                 con.SendPaket(pp);
