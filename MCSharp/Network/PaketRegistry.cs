@@ -60,7 +60,7 @@ namespace MCSharp.Network
             registry.AddPaket(0x01, new PongPaket(), MinecraftState.Status);
 
             // Play
-            registry.AddPaket(0x26, new JoinGamePaket(), MinecraftState.Play);
+            //registry.AddPaket(0x26, new JoinGamePaket(), MinecraftState.Play); Not working
         }
 
         // Pakets the server can understand
