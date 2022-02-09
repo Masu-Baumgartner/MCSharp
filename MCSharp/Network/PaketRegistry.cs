@@ -60,7 +60,8 @@ namespace MCSharp.Network
             registry.AddPaket(0x01, new PongPaket(), MinecraftState.Status);
 
             // Play
-            //registry.AddPaket(0x26, new JoinGamePaket(), MinecraftState.Play); Not working
+            registry.AddPaket(0x26, new JoinGamePaket(), MinecraftState.Play);
+            registry.AddPaket(0x21, new Pakets.Client.Play.KeepAlivePaket(), MinecraftState.Play);
         }
 
         // Pakets the server can understand
@@ -76,6 +77,9 @@ namespace MCSharp.Network
             // Status
             registry.AddPaket(0x00, new StatusRequestPaket(), MinecraftState.Status);
             registry.AddPaket(0x01, new PingPaket(), MinecraftState.Status);
+
+            // Play
+            registry.AddPaket(0x0F, new Pakets.Server.Play.KeepAlivePaket(), MinecraftState.Play);
         }
     }
 }

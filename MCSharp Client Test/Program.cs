@@ -1,4 +1,6 @@
-﻿using MCSharp.Network;
+﻿using Logging.Net;
+
+using MCSharp.Network;
 using MCSharp.Pakets.Server.Handshake;
 using MCSharp.Pakets.Server.Login;
 
@@ -15,10 +17,10 @@ namespace MCSharp_Client_Test
             var connection = new MinecraftConnection(cl, MCSharp.Enums.MinecraftFlow.ClientToServer);
 
             PaketRegistry writer = new PaketRegistry();
-            PaketRegistry.RegisterClientPakets(writer);
+            PaketRegistry.RegisterServerPakets(writer);
 
             PaketRegistry reader = new PaketRegistry();
-            PaketRegistry.RegisterServerPakets(reader);
+            PaketRegistry.RegisterClientPakets(reader);
 
             connection.WriterRegistry = writer;
             connection.ReaderRegistry = reader;
@@ -30,7 +32,7 @@ namespace MCSharp_Client_Test
 
             connection.Start();
 
-            connection.State = MCSharp.Enums.MinecraftState.Login;
+            connection.State = MCSharp.Enums.MinecraftState.Handshaking;
 
             connection.SendPaket(new HandshakePaket()
             {
@@ -39,6 +41,8 @@ namespace MCSharp_Client_Test
                 ServerAddress = "127.0.0.1",
                 ServerPort = 25565
             });
+
+            connection.State = MCSharp.Enums.MinecraftState.Login;
 
             connection.SendPaket(new LoginStartPaket()
             {

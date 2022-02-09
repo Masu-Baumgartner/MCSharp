@@ -28,7 +28,7 @@ namespace MCSharp.Pakets.Client.Play
 
         public void Decode(MinecraftStream minecraftStream)
         {
-            EntityId = minecraftStream.ReadVarInt();
+            EntityId = minecraftStream.ReadInt();
             IsHardcore = minecraftStream.ReadBool();
             Gamemode = minecraftStream.ReadByte();
             PreviousGamemode = minecraftStream.ReadByte();

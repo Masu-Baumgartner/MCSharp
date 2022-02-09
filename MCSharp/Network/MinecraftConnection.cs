@@ -12,6 +12,7 @@ using Org.BouncyCastle.Bcpg;
 using System.IO;
 using Ionic.Zlib;
 using MCSharp.Pakets.Client.Login;
+using Newtonsoft.Json.Linq;
 
 namespace MCSharp.Network
 {
@@ -24,7 +25,7 @@ namespace MCSharp.Network
         public MinecraftStream WriteStream { get; private set; }
         public CancellationToken CancellationToken { get; set; }
 
-        public Queue<IPaket> PaketQueue { get; set; } = new Queue<IPaket>();
+        public Queue<PacketQueueItem> PaketQueue { get; set; } = new Queue<PacketQueueItem>();
         public PaketRegistry WriterRegistry { get; set; }
         public PaketRegistry ReaderRegistry { get; set; }
 
@@ -32,7 +33,7 @@ namespace MCSharp.Network
         public Thread WriteThread { get; private set; }
 
         public bool CompressionEnabled { get; set; }
-        public int CompressionThreshold = 256;
+        public int CompressionThreshold { get; set; } = 256 ;
 
         public IPaketHandler Handler { get; set; }
 
@@ -104,7 +105,7 @@ namespace MCSharp.Network
 
                         if (paket != null && Handler != null)
                         {
-                            switch(State)
+                            switch (State)
                             {
                                 case MinecraftState.Handshaking:
                                     Handler.Handshake(paket);
@@ -129,7 +130,7 @@ namespace MCSharp.Network
             }
             catch (Exception e)
             {
-                Logger.Error($"Error reading paket: {e.Message}");
+                Logger.Error($"Error reading paket: (State {State}) {e.Message}");
             }
         }
 
@@ -145,23 +146,26 @@ namespace MCSharp.Network
                         break;
 
                     IPaket toSend = null;
+                    MinecraftState state = MinecraftState.Handshaking;
 
                     lock (PaketQueue)
                     {
-                        if(PaketQueue.Count > 0)
+                        if (PaketQueue.Count > 0)
                         {
-                            toSend = PaketQueue.Dequeue();
+                            var mcs = PaketQueue.Dequeue();
+                            toSend = mcs.Paket;
+                            state = mcs.State;
                         }
                     }
 
                     if (toSend != null)
                     {
-                        byte[] data = EncodePaket(toSend);
+                        byte[] data = EncodePaket(toSend, state);
 
                         WriteStream.WriteVarInt(data.Length);
                         WriteStream.Write(data);
 
-                        if(toSend is SetCompressionPaket)
+                        if (toSend is SetCompressionPaket)
                         {
                             CompressionEnabled = true;
                         }
@@ -172,11 +176,11 @@ namespace MCSharp.Network
             }
             catch (Exception e)
             {
-                Logger.Error($"Error writing paket: {e.Message}");
+                Logger.Error($"Error writing paket: (State: {State}) {e.Message}");
             }
         }
 
-        public byte[] EncodePaket(IPaket paket)
+        public byte[] EncodePaket(IPaket paket, MinecraftState state)
         {
             byte[] encodedPacket;
 
@@ -184,13 +188,13 @@ namespace MCSharp.Network
             {
                 using (MinecraftStream mc = new MinecraftStream(ms, CancellationToken))
                 {
-                    mc.WriteVarInt(WriterRegistry.GetPaketId(paket, State));
+                    mc.WriteVarInt(WriterRegistry.GetPaketId(paket, state));
                     paket.Encode(mc);
                 }
 
                 encodedPacket = ms.ToArray();
             }
-            
+
             if (CompressionEnabled)
             {
                 using (MemoryStream ms = new MemoryStream())
@@ -271,7 +275,7 @@ namespace MCSharp.Network
                         using (ZlibStream outZStream = new ZlibStream(
                             a, CompressionMode.Compress, true))
                         {
-                            outZStream.Write(data);
+                            outZStream.Write(data2);
                             //  outZStream.Write(data, 0, data.Length);
                         }
 
@@ -285,26 +289,43 @@ namespace MCSharp.Network
                 }
             }
 
-            Type packetType = ReaderRegistry.Pakets[State][(byte) packetId].GetType();
+            //Logger.Debug(BitConverter.GetBytes(packetId)[0].ToString());
 
-            result = (IPaket)packetType.GetConstructors()[0].Invoke(new object[0]);
-
-            using (var memoryStream = new MemoryStream(data))
+            if (ReaderRegistry.Pakets[State].ContainsKey((byte)packetId))
             {
-                using (MinecraftStream minecraftStream = new MinecraftStream(memoryStream, CancellationToken))
+                Type packetType = ReaderRegistry.Pakets[State][(byte)packetId].GetType();
+                result = (IPaket)packetType.GetConstructors()[0].Invoke(new object[0]);
+
+                using (var memoryStream = new MemoryStream(data))
                 {
-                    result.Decode(minecraftStream);
+                    using (MinecraftStream minecraftStream = new MinecraftStream(memoryStream, CancellationToken))
+                    {
+                        result.Decode(minecraftStream);
+                    }
                 }
+
+                if (result is SetCompressionPaket setCompressionPaket)
+                {
+                    CompressionThreshold = setCompressionPaket.Threshold;
+                    CompressionEnabled = true;
+                }
+
             }
+            else
+                Logger.Warn("Unimplemented paket: " + (byte)packetId);
 
             return result;
         }
 
         public void SendPaket(IPaket paket)
         {
-            lock(PaketQueue)
+            lock (PaketQueue)
             {
-                PaketQueue.Enqueue(paket);
+                PaketQueue.Enqueue(new PacketQueueItem()
+                {
+                    State = State,
+                    Paket = paket
+                });
             }
         }
     }

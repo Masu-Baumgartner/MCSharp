@@ -3,6 +3,7 @@
 using MCSharp.Network;
 using MCSharp.Pakets;
 using MCSharp.Pakets.Client.Login;
+using MCSharp.Pakets.Client.Play;
 
 using System;
 using System.Collections.Generic;
@@ -25,8 +26,8 @@ namespace MCSharp_Client_Test
         {
             if(paket is SetCompressionPaket compressionPaket)
             {
-                Connection.CompressionThreshold = compressionPaket.Threshold;
-                Connection.CompressionEnabled = true;
+                // Compresssion is automatic enabled so this is just a log
+                Logger.Info("Enabled compression");
             }
 
             if(paket is LoginSuccessPaket loginSuccessPaket)
@@ -38,7 +39,20 @@ namespace MCSharp_Client_Test
 
         public void Play(IPaket paket)
         {
-            
+            if(paket is JoinGamePaket joinGamePaket)
+            {
+                Logger.Info("Joined the game");
+            }
+
+            if(paket is MCSharp.Pakets.Client.Play.KeepAlivePaket keepAlivePaket)
+            {
+                Logger.Info("Ping!");
+
+                Connection.SendPaket(new MCSharp.Pakets.Server.Play.KeepAlivePaket()
+                {
+                    Payload = keepAlivePaket.Payload
+                });
+            }
         }
 
         public void Status(IPaket paket)
