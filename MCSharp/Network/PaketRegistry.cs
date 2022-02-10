@@ -72,6 +72,8 @@ namespace MCSharp.Network
             registry.AddPaket(0x08, new AcknowledgePlayerDiggingPaket(), MinecraftState.Play);
             registry.AddPaket(0x0C, new BlockChangePaket(), MinecraftState.Play);
             registry.AddPaket(0x36, new PlayerInfoPaket(), MinecraftState.Play);
+            registry.AddPaket(0x52, new UpdateHealthPaket(), MinecraftState.Play);
+            registry.AddPaket(0x22, new ChunkDataUpdateLightPaket(), MinecraftState.Play);
         }
 
         // Pakets the server can understand

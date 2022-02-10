@@ -90,6 +90,16 @@ namespace MCSharp_Client_Test
                     }
                 }
             }
+
+            if(paket is UpdateHealthPaket updateHealthPaket)
+            {
+                Logger.Info($"Health update: Health: {updateHealthPaket.Health} Food: {updateHealthPaket.Food} Saturation: {updateHealthPaket.Saturation}");
+            }
+
+            if(paket is ChunkDataUpdateLightPaket chunk)
+            {
+                Logger.Info($"Received chunk: {chunk.ChunkX} {chunk.ChunkZ} with {chunk.EntitiesCount} entities");
+            }
         }
 
         public void Status(IPaket paket)

@@ -603,15 +603,24 @@ namespace MCSharp.Network
 
 		public NbtCompound ReadNbtCompound()
 		{
-			NbtTagType t = (NbtTagType)ReadByte();
-			if (t != NbtTagType.Compound) return null;
-			Position--;
+			try
+            {
+				int type = ReadByte();
+				NbtTagType t = (NbtTagType)type;
+				if (t != NbtTagType.Compound) return null;
+				Position--;
 
-			NbtFile file = new NbtFile() { BigEndian = true };
+				NbtFile file = new NbtFile() { BigEndian = true };
 
-			file.LoadFromStream(this, NbtCompression.None);
+				file.LoadFromStream(this, NbtCompression.AutoDetect);
 
-			return (NbtCompound)file.RootTag;
+				return (NbtCompound)file.RootTag;
+			}
+			catch(Exception e)
+            {
+				//Logging.Net.Logger.Warn("NBT Error. fNBT might not implement long arrays: " + e.Message);
+				return null;
+            }
 		}
 
 		public void WriteNbtCompound(NbtCompound compound)
