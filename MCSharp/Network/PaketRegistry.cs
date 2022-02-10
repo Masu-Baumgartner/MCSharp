@@ -68,6 +68,10 @@ namespace MCSharp.Network
             // Play
             registry.AddPaket(0x26, new JoinGamePaket(), MinecraftState.Play);
             registry.AddPaket(0x21, new Pakets.Client.Play.KeepAlivePaket(), MinecraftState.Play);
+            registry.AddPaket(0x04, new SpawnPlayerPaket(), MinecraftState.Play);
+            registry.AddPaket(0x08, new AcknowledgePlayerDiggingPaket(), MinecraftState.Play);
+            registry.AddPaket(0x0C, new BlockChangePaket(), MinecraftState.Play);
+            registry.AddPaket(0x36, new PlayerInfoPaket(), MinecraftState.Play);
         }
 
         // Pakets the server can understand

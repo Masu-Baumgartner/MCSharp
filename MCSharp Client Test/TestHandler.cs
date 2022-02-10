@@ -61,6 +61,35 @@ namespace MCSharp_Client_Test
                     Payload = keepAlivePaket.Payload
                 });
             }
+
+            if(paket is SpawnPlayerPaket spawnPlayerPaket)
+            {
+                Logger.Info($"Spawning player at {spawnPlayerPaket.X} {spawnPlayerPaket.Y} {spawnPlayerPaket.Z}");
+            }
+
+            if(paket is AcknowledgePlayerDiggingPaket acknowledgePlayerDigging)
+            {
+                var pos = acknowledgePlayerDigging.Location;
+                Logger.Info($"Player is digging at {pos.X} {pos.Y} {pos.Z}");
+            }
+
+            if(paket is BlockChangePaket blockChangePaket)
+            {
+                var pos = blockChangePaket.Location;
+                Logger.Info($"Block changed at {pos.X} {pos.Y} {pos.Z} to {blockChangePaket.BlockId}");
+            }
+
+            if(paket is PlayerInfoPaket playerInfoPaket)
+            {
+                if(playerInfoPaket.Action == 0)
+                {
+                    Logger.Info("Players:");
+                    foreach(var p in playerInfoPaket.Players)
+                    {
+                        Logger.Info($"{p.Name} > Gamemode: {p.GameMode} Ping: {p.Ping}");
+                    }
+                }
+            }
         }
 
         public void Status(IPaket paket)
