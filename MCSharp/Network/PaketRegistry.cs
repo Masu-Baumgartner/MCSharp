@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 
+using Logging.Net;
+
 using MCSharp.Enums;
 using MCSharp.Pakets;
 using MCSharp.Pakets.Client.Login;
@@ -32,11 +34,15 @@ namespace MCSharp.Network
         {
             byte res = 0x00;
 
-            foreach (byte b in Pakets.Keys)
-            {
-                IPaket cp = Pakets[state][b];
+            var csd = Pakets[state];
 
-                if(cp.GetType() == paket.GetType())
+            //Logger.Debug("Found registry: for " + state);
+
+            foreach(var b in csd.Keys)
+            {
+                var pt = csd[b].GetType();
+
+                if(pt.Name == paket.GetType().Name)
                 {
                     res = b;
                     break;

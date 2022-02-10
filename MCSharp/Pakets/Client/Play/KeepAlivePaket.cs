@@ -12,7 +12,7 @@ namespace MCSharp.Pakets.Client.Play
 
         public void Decode(MinecraftStream minecraftStream)
         {
-            Payload = minecraftStream.ReadInt();
+            Payload = minecraftStream.ReadLong();
         }
 
         public void Encode(MinecraftStream minecraftStream)

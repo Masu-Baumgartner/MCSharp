@@ -13,6 +13,7 @@ using System.IO;
 using Ionic.Zlib;
 using MCSharp.Pakets.Client.Login;
 using Newtonsoft.Json.Linq;
+using System.Data;
 
 namespace MCSharp.Network
 {
@@ -32,8 +33,8 @@ namespace MCSharp.Network
         public Thread ReadThread { get; private set; }
         public Thread WriteThread { get; private set; }
 
-        public bool CompressionEnabled { get; set; }
-        public int CompressionThreshold { get; set; } = 256 ;
+        public bool CompressionEnabled { get; set; } = false;
+        public int CompressionThreshold { get; set; } = 256;
 
         public IPaketHandler Handler { get; set; }
 
@@ -100,7 +101,7 @@ namespace MCSharp.Network
 
                     if (ReadStream.DataAvailable)
                     {
-                        IPaket paket = TryReadPaket(out var lastPaketId);
+                        IPaket paket = TryReadPacket(ReadStream, out var lastPaketId);
                         _lastReceivedPacketId = lastPaketId;
 
                         if (paket != null && Handler != null)
@@ -188,7 +189,8 @@ namespace MCSharp.Network
             {
                 using (MinecraftStream mc = new MinecraftStream(ms, CancellationToken))
                 {
-                    mc.WriteVarInt(WriterRegistry.GetPaketId(paket, state));
+                    int id = WriterRegistry.GetPaketId(paket, state);
+                    mc.WriteVarInt(id);
                     paket.Encode(mc);
                 }
 
@@ -230,91 +232,111 @@ namespace MCSharp.Network
             return encodedPacket;
         }
 
-        public IPaket TryReadPaket(out int lastPaketId)
+        public IPaket TryReadPacket(MinecraftStream stream, out int lastPacketId)
         {
-            IPaket result = null;
-
-            int packetId = 0;
-            byte[] data = new byte[0];
+            IPaket paket = null;
+            int paketId = -1;
+            byte[] paketData;
 
             if (!CompressionEnabled)
             {
-                int length = ReadStream.ReadVarInt();
+                //Logger.Debug("Using default reader");
 
-                int packetIdLength;
-                packetId = ReadStream.ReadVarInt(out packetIdLength);
+                int lenght = stream.ReadVarInt();
+                int paketIdLenght = -1;
+                paketId = stream.ReadVarInt(out paketIdLenght);
 
-                _lastReceivedPacketId = lastPaketId = packetId;
+                int dataLenght = lenght - paketIdLenght;
 
-                if (length - packetIdLength > 0)
+                if (dataLenght > 0)
                 {
-                    data = ReadStream.Read(length - packetIdLength);
+                    paketData = stream.Read(dataLenght);
+                }
+                else
+                {
+                    paketData = new byte[0];
+                    //Logger.Debug("Empty paket");
                 }
             }
             else
             {
-                int packetLength = ReadStream.ReadVarInt();
+                int paketLenght = stream.ReadVarInt();
+                int dataLenghtLenght;
+                int dataLenght = stream.ReadVarInt(out dataLenghtLenght);
 
-                int br;
-                int dataLength = ReadStream.ReadVarInt(out br);
-
-                int readMore;
-
-                if (dataLength == 0)
+                if (dataLenght == 0)
                 {
-                    packetId = ReadStream.ReadVarInt(out readMore);
-                    _lastReceivedPacketId = lastPaketId = packetId;
-                    data = ReadStream.Read(packetLength - (br + readMore));
+                    //Logger.Debug("Using reader without compressing -> threshold");
+
+                    int paketIdLenght;
+                    paketId = stream.ReadVarInt(out paketIdLenght);
+                    paketData = stream.Read(paketLenght - dataLenghtLenght - paketIdLenght);
                 }
                 else
                 {
-                    var data2 = ReadStream.Read(packetLength - br);
+                    //Logger.Debug("Using compress reader");
+
+                    var cache = stream.Read(paketLenght - dataLenghtLenght);
 
                     using (MinecraftStream a = new MinecraftStream(CancellationToken))
                     {
-                        using (ZlibStream outZStream = new ZlibStream(
-                            a, CompressionMode.Compress, true))
+                        using (ZlibStream zstream = new ZlibStream(a, CompressionMode.Decompress, true))
                         {
-                            outZStream.Write(data2);
-                            //  outZStream.Write(data, 0, data.Length);
+                            zstream.Write(cache);
                         }
 
                         a.Seek(0, SeekOrigin.Begin);
 
-                        int l;
-                        packetId = a.ReadVarInt(out l);
-                        _lastReceivedPacketId = lastPaketId = packetId;
-                        data = a.Read(dataLength - l);
+                        int paketIdLenght;
+                        paketId = a.ReadVarInt(out paketIdLenght);
+
+                        int dataSize = paketLenght - dataLenghtLenght - paketIdLenght;
+                        paketData = a.Read(dataSize);
                     }
                 }
             }
 
-            //Logger.Debug(BitConverter.GetBytes(packetId)[0].ToString());
+            lastPacketId = paketId;
 
-            if (ReaderRegistry.Pakets[State].ContainsKey((byte)packetId))
+            if (ReaderRegistry.Pakets[State].ContainsKey((byte)paketId))
             {
-                Type packetType = ReaderRegistry.Pakets[State][(byte)packetId].GetType();
-                result = (IPaket)packetType.GetConstructors()[0].Invoke(new object[0]);
+                paket = ReaderRegistry.Pakets[State][(byte)paketId];
+            }
 
-                using (var memoryStream = new MemoryStream(data))
+            //Logger.Info($"Got packet: {paket} (0x{paketId:X2})");
+
+            try
+            {
+                if (paket == null)
+                {
+                    //Logger.Warn("Unknown paket: " + paketId);
+
+                    return null;
+                }
+
+                //Logger.Debug($"Received {paket}");
+
+                using (var memoryStream = new MemoryStream(paketData))
                 {
                     using (MinecraftStream minecraftStream = new MinecraftStream(memoryStream, CancellationToken))
                     {
-                        result.Decode(minecraftStream);
+                        paket.Decode(minecraftStream);
                     }
                 }
 
-                if (result is SetCompressionPaket setCompressionPaket)
+                if(paket is SetCompressionPaket setCompressionPaket)
                 {
                     CompressionThreshold = setCompressionPaket.Threshold;
                     CompressionEnabled = true;
                 }
 
+                return paket;
             }
-            else
-                Logger.Warn("Unimplemented paket: " + (byte)packetId);
-
-            return result;
+            catch (Exception e)
+            {
+                Logger.Error("WTF: " + e.Message);
+                return null;
+            }
         }
 
         public void SendPaket(IPaket paket)

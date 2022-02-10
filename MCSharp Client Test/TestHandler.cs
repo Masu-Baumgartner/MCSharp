@@ -35,6 +35,11 @@ namespace MCSharp_Client_Test
                 Connection.State = MCSharp.Enums.MinecraftState.Play;
                 Logger.Info("Login success");
             }
+
+            if(paket is DisconnectPaket disconnectPaket)
+            {
+                Logger.Info("Disconnected: " + disconnectPaket.Message);
+            }
         }
 
         public void Play(IPaket paket)
@@ -42,11 +47,14 @@ namespace MCSharp_Client_Test
             if(paket is JoinGamePaket joinGamePaket)
             {
                 Logger.Info("Joined the game");
+
+                Logger.Info("Gamemode: " + joinGamePaket.Gamemode);
+                Logger.Info("Sim: " + joinGamePaket.SimulationDistance);
             }
 
             if(paket is MCSharp.Pakets.Client.Play.KeepAlivePaket keepAlivePaket)
             {
-                Logger.Info("Ping!");
+                Logger.Info("Ping! Payload: " + keepAlivePaket.Payload);
 
                 Connection.SendPaket(new MCSharp.Pakets.Server.Play.KeepAlivePaket()
                 {
