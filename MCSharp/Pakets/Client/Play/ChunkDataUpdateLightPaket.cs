@@ -2,216 +2,99 @@
 
 using fNbt;
 using System.Collections.Generic;
+using System;
+using Logging.Net;
+using Org.BouncyCastle.Bcpg;
+using System.Threading.Tasks;
+using System.IO;
 
 namespace MCSharp.Pakets.Client.Play
 {
     public class ChunkDataUpdateLightPaket : IPaket
     {
-        public int ChunkX { get; set; }
-        public int ChunkZ { get; set; }
-        public NbtCompound Heightmaps { get; set; }
-        public int Size { get; set; }
-        public byte[] ChunkData { get; set; }
-        public int EntitiesCount { get; set; }
-        public List<BlockEntity> Entities { get; set; }
-        public bool TrustEdges { get; set; }
-        public BitSet SkyLightMask { get; set; }
-        public BitSet BlockLightMask { get; set; }
-        public BitSet EmptySkyLightMask { get; set; }
-        public BitSet EmptyBlockLightMask { get; set; }
-        public int SkyLightLenght { get; set; }
-        public List<LightArrayThing> SkyLight { get; set; }
-        public int BlockLightLenght { get; set; }
-        public List<LightArrayThing> BlockLight { get; set; }
+		public int ChunkX;
+		public int ChunkZ;
 
-        public void Decode(MinecraftStream minecraftStream)
-        {
-            ChunkX = minecraftStream.ReadInt();
-            ChunkZ = minecraftStream.ReadInt();
+		public Memory<byte> Buffer;
+		public List<BlockEntityData> TileEntities;
+		public NbtCompound HeightMaps;
 
-            /*
-            int t = minecraftStream.ReadVarInt();
-            for (int i = 0; i < t; i++)
-                minecraftStream.ReadLong();*/
+		public LightingData LightingData;
 
-            Heightmaps = minecraftStream.ReadNbtCompound();
-            Size = minecraftStream.ReadVarInt();
-            ChunkData = minecraftStream.Read(Size);
-            EntitiesCount = minecraftStream.ReadVarInt();
-            Entities = new List<BlockEntity>();
+        public void Decode(MinecraftStream stream)
+		{
+			ChunkX = stream.ReadInt();
+			ChunkZ = stream.ReadInt();
 
-            for(int i = 0; i < EntitiesCount; i++)
+			HeightMaps = stream.ReadNbtCompound();
+
+			int i = stream.ReadVarInt();
+			Buffer = new Memory<byte>(new byte[i]);
+			stream.ReadMemory(Buffer, i);
+
+			int tileEntities = stream.ReadVarInt();
+
+			for (int k = 0; k < tileEntities; k++)
+			{
+				BlockEntityData blockEntity = new BlockEntityData();
+				blockEntity.Read(stream);
+				TileEntities.Add(blockEntity);
+			}
+
+			LightingData = LightingData.FromStream(stream);
+		}
+
+		public void Encode(MinecraftStream stream)
+		{
+			stream.WriteInt(ChunkX);
+			stream.WriteInt(ChunkZ);
+
+			stream.WriteNbtCompound(HeightMaps);
+
+			stream.WriteVarInt(Buffer.Length);
+			stream.Write(Buffer.ToArray());
+			
+			stream.WriteVarInt((int)TileEntities.Count);
+
+			foreach(BlockEntityData blockEntity in TileEntities)
             {
-                var be = new BlockEntity();
-
-                be.PackedXZ = minecraftStream.ReadByte();
-                be.Y = minecraftStream.ReadShort();
-                be.Type = minecraftStream.ReadVarInt();
-                be.Data = minecraftStream.ReadNbtCompound();
-
-                Entities.Add(be);
+				blockEntity.Write(stream);
             }
 
-            TrustEdges = minecraftStream.ReadBool();
+			LightingData.ToStream(stream, LightingData);
+		}
 
-            var bs = new BitSet();
-            bs.Lenght = minecraftStream.ReadVarInt();
-            bs.Bits = new List<long>();
+		public class BlockEntityData
+		{
+			public byte X { get; set; }
+			public byte Z { get; set; }
+			public short Y { get; set; }
+			public int Type { get; set; }
+			public NbtCompound Data { get; set; }
 
-            for(int i = 0; i < bs.Lenght; i++)
-            {
-                bs.Bits.Add(minecraftStream.ReadLong());
-            }
+			public BlockEntityData() { }
 
-            SkyLightMask = bs;
+			public void Read(MinecraftStream stream)
+			{
+				var packedXZ = stream.ReadUnsignedByte();
 
-            bs = new BitSet();
-            bs.Lenght = minecraftStream.ReadVarInt();
-            bs.Bits = new List<long>();
+				X = (byte)(packedXZ >> 4);
+				Z = (byte)((packedXZ) & 15);
 
-            for (int i = 0; i < bs.Lenght; i++)
-            {
-                bs.Bits.Add(minecraftStream.ReadLong());
-            }
+				Y = stream.ReadShort();
+				Type = stream.ReadVarInt();
+				Data = stream.ReadNbtCompound();
+			}
 
-            BlockLightMask = bs;
+			public void Write(MinecraftStream stream) 
+			{
+				byte b = (byte)(X << 4 | Z & 15);
+				stream.Write(new byte[] {b});
 
-            bs = new BitSet();
-            bs.Lenght = minecraftStream.ReadVarInt();
-            bs.Bits = new List<long>();
-
-            for (int i = 0; i < bs.Lenght; i++)
-            {
-                bs.Bits.Add(minecraftStream.ReadLong());
-            }
-
-            EmptySkyLightMask = bs;
-
-            bs = new BitSet();
-            bs.Lenght = minecraftStream.ReadVarInt();
-            bs.Bits = new List<long>();
-
-            for (int i = 0; i < bs.Lenght; i++)
-            {
-                bs.Bits.Add(minecraftStream.ReadLong());
-            }
-
-            EmptyBlockLightMask = bs;
-
-            SkyLightLenght = minecraftStream.ReadVarInt();
-            SkyLight = new List<LightArrayThing>();
-
-            for(int i = 0; i < SkyLightLenght; i++)
-            {
-                var l = new LightArrayThing();
-                l.Byte = new List<byte>();
-
-                l.Lenght = minecraftStream.ReadVarInt();
-
-                for(int ii = 0; ii < l.Lenght; ii++)
-                {
-                    l.Byte.Add((byte)minecraftStream.ReadByte());
-                }
-
-                SkyLight.Add(l);
-            }
-
-            BlockLightLenght = minecraftStream.ReadVarInt();
-            BlockLight = new List<LightArrayThing>();
-
-            for (int i = 0; i < BlockLightLenght; i++)
-            {
-                var l = new LightArrayThing();
-                l.Byte = new List<byte>();
-
-                l.Lenght = minecraftStream.ReadVarInt();
-
-                for (int ii = 0; ii < l.Lenght; ii++)
-                {
-                    l.Byte.Add((byte)minecraftStream.ReadByte());
-                }
-
-                BlockLight.Add(l);
-            }
-
-        }
-
-        public void Encode(MinecraftStream minecraftStream)
-        {
-            minecraftStream.WriteInt(ChunkX);
-            minecraftStream.WriteInt(ChunkZ);
-            minecraftStream.WriteNbtCompound(Heightmaps);
-            minecraftStream.WriteVarInt(Size);
-            minecraftStream.Write(ChunkData);
-            minecraftStream.WriteVarInt(EntitiesCount);
-            
-            foreach(var e in Entities)
-            {
-                minecraftStream.WriteByte((byte)e.PackedXZ);
-                minecraftStream.WriteShort(e.Y);
-                minecraftStream.WriteVarInt(e.Type);
-                minecraftStream.WriteNbtCompound(e.Data);
-            }
-
-            minecraftStream.WriteBool(TrustEdges);
-
-            minecraftStream.WriteVarInt(SkyLightMask.Lenght);
-            foreach (var l in SkyLightMask.Bits)
-                minecraftStream.WriteLong(l);
-
-            minecraftStream.WriteVarInt(BlockLightMask.Lenght);
-            foreach (var l in BlockLightMask.Bits)
-                minecraftStream.WriteLong(l);
-
-            minecraftStream.WriteVarInt(EmptySkyLightMask.Lenght);
-            foreach (var l in EmptySkyLightMask.Bits)
-                minecraftStream.WriteLong(l);
-
-            minecraftStream.WriteVarInt(EmptyBlockLightMask.Lenght);
-            foreach (var l in EmptyBlockLightMask.Bits)
-                minecraftStream.WriteLong(l);
-
-            minecraftStream.WriteVarInt(SkyLightLenght);
-            foreach(var lt in SkyLight)
-            {
-                minecraftStream.WriteVarInt(lt.Lenght);
-
-                foreach(var b in lt.Byte)
-                {
-                    minecraftStream.WriteByte(b);
-                }
-            }
-
-            minecraftStream.WriteVarInt(BlockLightLenght);
-            foreach (var lt in BlockLight)
-            {
-                minecraftStream.WriteVarInt(lt.Lenght);
-
-                foreach (var b in lt.Byte)
-                {
-                    minecraftStream.WriteByte(b);
-                }
-            }
-        }
-
-        public struct BlockEntity
-        {
-            public int PackedXZ { get; set; }
-            public short Y { get; set; }
-            public int Type { get; set; }
-            public NbtCompound Data { get; set; }
-        }
-
-        public struct BitSet
-        {
-            public int Lenght { get; set; }
-            public List<long> Bits { get; set; }
-        }
-
-        public struct LightArrayThing
-        {
-            public int Lenght { get; set; }
-            public List<byte> Byte { get; set; }
-        }
-    }
+				stream.WriteShort(Y);
+				stream.WriteVarInt(Type);
+				stream.WriteNbtCompound(Data);
+			}
+		}
+	}
 }

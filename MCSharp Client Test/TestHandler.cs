@@ -98,7 +98,7 @@ namespace MCSharp_Client_Test
 
             if(paket is ChunkDataUpdateLightPaket chunk)
             {
-                Logger.Info($"Received chunk: {chunk.ChunkX} {chunk.ChunkZ} with {chunk.EntitiesCount} entities");
+                Logger.Info($"Received chunk: {chunk.ChunkX} {chunk.ChunkZ} with {chunk.TileEntities.Count} entities");
             }
         }
 

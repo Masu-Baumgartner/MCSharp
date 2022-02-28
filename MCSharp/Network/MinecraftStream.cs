@@ -92,6 +92,13 @@ namespace MCSharp.Network
 			data.CopyTo(memory);
 		}
 
+		public void ReadMemory(Memory<byte> memory, int count)
+		{
+			byte[] data = new byte[count];
+			BaseStream.Read(data, 0, count);
+			data.CopyTo(memory);
+		}
+
 		public override int Read(byte[] buffer, int offset, int count)
 		{
 			return BaseStream.Read(buffer, offset, count);
@@ -185,6 +192,14 @@ namespace MCSharp.Network
 		{
 			int read = 0;
 			return ReadVarInt(out read);
+		}
+
+		public byte ReadUnsignedByte()
+		{
+			var buffer = new byte[1];
+			Read(buffer);
+
+			return buffer[0];
 		}
 
 		public int ReadVarInt(out int bytesRead)
@@ -605,20 +620,20 @@ namespace MCSharp.Network
 		{
 			try
             {
-				int type = ReadByte();
-				NbtTagType t = (NbtTagType)type;
+				NbtTagType t = (NbtTagType)(ReadUnsignedByte());
+
 				if (t != NbtTagType.Compound) return null;
 				Position--;
 
 				NbtFile file = new NbtFile() { BigEndian = true };
 
-				file.LoadFromStream(this, NbtCompression.AutoDetect);
+				file.LoadFromStream(this, NbtCompression.None);
 
 				return (NbtCompound)file.RootTag;
 			}
 			catch(Exception e)
             {
-				//Logging.Net.Logger.Warn("NBT Error. fNBT might not implement long arrays: " + e.Message);
+				Logging.Net.Logger.Warn("NBT Error. fNBT might not implement long arrays: " + e.Message);
 				return null;
             }
 		}
