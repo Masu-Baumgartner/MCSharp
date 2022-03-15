@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
 
-using Logging.Net;
-
 using MCSharp.Enums;
 using MCSharp.Pakets;
 using MCSharp.Pakets.Client.Login;
@@ -9,6 +7,7 @@ using MCSharp.Pakets.Client.Play;
 using MCSharp.Pakets.Client.Status;
 using MCSharp.Pakets.Server.Handshake;
 using MCSharp.Pakets.Server.Login;
+using MCSharp.Pakets.Server.Play;
 using MCSharp.Pakets.Server.Status;
 
 namespace MCSharp.Network
@@ -73,7 +72,13 @@ namespace MCSharp.Network
             registry.AddPaket(0x0C, new BlockChangePaket(), MinecraftState.Play);
             registry.AddPaket(0x36, new PlayerInfoPaket(), MinecraftState.Play);
             registry.AddPaket(0x52, new UpdateHealthPaket(), MinecraftState.Play);
-            registry.AddPaket(0x22, new ChunkDataUpdateLightPaket(), MinecraftState.Play);
+            registry.AddPaket(0x22, new Pakets.Client.Play.ChunkDataUpdateLightPaket(), MinecraftState.Play);
+            registry.AddPaket(0x38, new Pakets.Client.Play.PlayerPositionAndLookPaket(), MinecraftState.Play);
+            registry.AddPaket(0x0F, new Pakets.Client.Play.ChatMessagePaket(), MinecraftState.Play);
+            registry.AddPaket(0x29, new EntityPositionPaket(), MinecraftState.Play);
+            registry.AddPaket(0x2A, new EntityPositionAndRotationPaket(), MinecraftState.Play);
+            registry.AddPaket(0x49, new UpdateViewPositionPaket(), MinecraftState.Play);
+            registry.AddPaket(0x1D, new UnloadChunkPaket(), MinecraftState.Play);
         }
 
         // Pakets the server can understand
@@ -92,6 +97,15 @@ namespace MCSharp.Network
 
             // Play
             registry.AddPaket(0x0F, new Pakets.Server.Play.KeepAlivePaket(), MinecraftState.Play);
+            registry.AddPaket(0x00, new TeleportConfirmPaket(), MinecraftState.Play);
+            registry.AddPaket(0x05, new ClientSettingsPaket(), MinecraftState.Play);
+            registry.AddPaket(0x04, new ClientStatusPaket(), MinecraftState.Play);
+            registry.AddPaket(0x03, new Pakets.Server.Play.ChatMessagePaket(), MinecraftState.Play);
+            registry.AddPaket(0x11, new PlayerPositionPaket(), MinecraftState.Play);
+            registry.AddPaket(0x12, new Pakets.Server.Play.PlayerPositionAndRotationPaket(), MinecraftState.Play);
+            registry.AddPaket(0x1B, new EntityActionPaket(), MinecraftState.Play);
+            registry.AddPaket(0x14, new PlayerMovementPaket(), MinecraftState.Play);
+            registry.AddPaket(0x13, new PlayerRotationPaket(), MinecraftState.Play);
         }
     }
 }

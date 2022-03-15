@@ -16,7 +16,7 @@ namespace MCSharp.Pakets.Client.Play
 		public int ChunkZ;
 
 		public Memory<byte> Buffer;
-		public List<BlockEntityData> TileEntities;
+		public List<BlockEntityData> TileEntities = new List<BlockEntityData>();
 		public NbtCompound HeightMaps;
 
 		public LightingData LightingData;
