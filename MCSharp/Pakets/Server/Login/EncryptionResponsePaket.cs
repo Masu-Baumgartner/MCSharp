@@ -12,9 +12,9 @@ namespace MCSharp.Pakets.Server.Login
         public void Decode(MinecraftStream minecraftStream)
         {
             SharedKeyLenght = minecraftStream.ReadVarInt();
-            minecraftStream.Read(SharedKey, SharedKeyLenght);
+            SharedKey = minecraftStream.Read(SharedKeyLenght);
             VerifyTokenLenght = minecraftStream.ReadVarInt();
-            minecraftStream.Read(VerifyToken, VerifyTokenLenght);
+            VerifyToken = minecraftStream.Read(VerifyTokenLenght);
         }
 
         public void Encode(MinecraftStream minecraftStream)
