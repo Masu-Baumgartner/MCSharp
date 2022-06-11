@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <Version>0.0.2</Version>
-    <Authors>Marcel-Baumgartner,DalkYoutube</Authors>
+    <Version>0.0.3</Version>
+    <Authors>Marcel-Baumgartner,DalkYoutube,tpart120,marcermarc</Authors>
     <Company>Endelon Hosting</Company>
     <Copyright>Copyright 2022 Marcel-Baumgartner</Copyright>
     <Description>A minecraft network library to make it esier to create minecraft network apps like proxies, oder custom clients</Description>
@@ -13,19 +13,16 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>minecraft;networking;tcp</PackageTags>
     <PackageReleaseNotes>Note: Its just a beta. Not all packets are implemented</PackageReleaseNotes>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <PackageVersion>0.0.4</PackageVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="DotNetZip" Version="1.16.0" />
+    <PackageReference Include="fNbt" Version="0.6.4" />
     <PackageReference Include="Logging.Net" Version="1.0.2" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="Portable.BouncyCastle" Version="1.9.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="fNbt">
-      <HintPath>Lib\fNbt.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
   <ItemGroup>
